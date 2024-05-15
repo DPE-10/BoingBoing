@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lamp Stomper Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        #gameArea {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #lamp {
+            width: 50px;
+            height: 100px;
+            background: url('lamp.svg') no-repeat center center / contain;
+            position: absolute;
+            top: 50%;
+            left: 90%;
+            transform: translate(-50%, -50%) scaleX(-1);
+            cursor: grab;
+            user-select: none;
+        }
+        .letter {
+            font-size: 40px;
+            position: absolute;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+        .bounce {
+            animation: bounce 0.3s;
+        }
+        @keyframes bounce {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+        #counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="lamp"></div>
+        <div id="counter">Squished Letters: 0</div>
+    </div>
+    <audio id="stompSound1" src="stomp_1.mp3"></audio>
+    <audio id="stompSound2" src="stomp_2.mp3"></audio>
+    <audio id="stompSound3" src="stomp_3.mp3"></audio>
+    <audio id="stompSound4" src="stomp_4.mp3"></audio>
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const lamp = document.getElementById('lamp');
+        const counter = document.getElementById('counter');
+        const stompSounds = [
+            document.getElementById('stompSound1'),
+            document.getElementById('stompSound2'),
+            document.getElementById('stompSound3'),
+            document.getElementById('stompSound4')
+        ];
+
+        let lampDragging = false;
+        let lampOffsetX, lampOffsetY;
+        let isPixarComplete = false;
+        let squishedCount = 0;
+        let lastMouseX = 0;
+
+        lamp.addEventListener('mousedown', (e) => {
+            lampDragging = true;
+            lampOffsetX = e.offsetX;
+            lampOffsetY = e.offsetY;
+            lamp.style.cursor = 'grabbing';
+            lastMouseX = e.clientX;
+        });
+
+        document.addEventListener('mouseup', () => {
+            lampDragging = false;
+            lamp.style.cursor = 'grab';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (lampDragging) {
+                const newLeft = e.clientX - lampOffsetX;
+                const newTop = e.clientY - lampOffsetY;
+                lamp.style.left = `${newLeft}px`;
+                lamp.style.top = `${newTop}px`;
+
+                // Update lamp direction based on mouse movement
+                if (e.clientX < lastMouseX) {
+                    lamp.style.transform = 'translate(-50%, -50%) scaleX(-1)';
+                } else if (e.clientX > lastMouseX) {
+                    lamp.style.transform = 'translate(-50%, -50%) scaleX(1)';
+                }
+
+                lastMouseX = e.clientX;
+                checkCollision();
+            }
+        });
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+        function playNextStompSound(index) {
+            stompSounds[index].play();
+        }
+
+        function createLetter(character, x = null, y = null) {
+            const letterDiv = document.createElement('div');
+            letterDiv.classList.add('letter');
+            letterDiv.innerText = character;
+            letterDiv.style.left = x ? `${x}px` : `${getRandomInt(0, window.innerWidth - 50)}px`;
+            letterDiv.style.top = y ? `${y}px` : `${getRandomInt(0, window.innerHeight - 50)}px`;
+            letterDiv.dataset.stomped = 0;
+            gameArea.appendChild(letterDiv);
+        }
+
+        function createPixarLetters() {
+            const word = "PIXAR";
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            const spacing = 60;
+            for (let i = 0; i < word.length; i++) {
+                createLetter(word[i], centerX - (spacing * (word.length / 2 - i)), centerY);
+            }
+        }
+
+        function updateCounter() {
+            counter.innerText = `Squished Letters: ${squishedCount}`;
+        }
+
+        function checkCollision() {
+            const lampRect = lamp.getBoundingClientRect();
+            const letters = document.querySelectorAll('.letter');
+            letters.forEach(letter => {
+                const letterRect = letter.getBoundingClientRect();
+                const lampBottom = lampRect.bottom;
+                const letterTop = letterRect.top;
+                if (
+                    lampRect.left < letterRect.right &&
+                    lampRect.right > letterRect.left &&
+                    lampBottom > letterTop && // Lamp's bottom is below the top of the letter
+                    lampBottom < letterRect.bottom // Lamp's bottom is above the bottom of the letter
+                ) {
+                    let stompedCount = parseInt(letter.dataset.stomped);
+                    if (stompedCount < 4) {
+                        playNextStompSound(stompedCount); // Play next sound in sequence
+                        letter.classList.add('bounce');
+                        setTimeout(() => {
+                            stompedCount++;
+                            letter.dataset.stomped = stompedCount;
+                            letter.style.transform = `scale(${1 - stompedCount * 0.2})`;
+                            letter.classList.remove('bounce');
+                            if (stompedCount === 4) {
+                                letter.innerText = '';
+                                setTimeout(() => {
+                                    gameArea.removeChild(letter);
+                                    squishedCount++;
+                                    updateCounter();
+                                    checkAndCreateLetters();
+                                }, 500);
+                            }
+                        }, 300); // No additional delay, just the animation duration
+                    }
+                }
+            });
+        }
+
+        function checkAndCreateLetters() {
+            const letters = document.querySelectorAll('.letter');
+            if (!isPixarComplete && letters.length === 0) {
+                isPixarComplete = true;
+                for (let i = 0; i < 10; i++) {
+                    createLetter(String.fromCharCode(65 + getRandomInt(0, 26)));
+                }
+            }
+            if (isPixarComplete && letters.length < 5) {
+                for (let i = letters.length; i < 10; i++) {
+                    createLetter(String.fromCharCode(65 + getRandomInt(0, 26)));
+                }
+            }
+        }
+
+        createPixarLetters();
+    </script>
+</body>
+</html>
