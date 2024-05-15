@@ -27,7 +27,7 @@
             user-select: none;
         }
         .letter {
-            font-size: 40px;
+            font-size: 24px;
             position: absolute;
             user-select: none;
             transition: transform 0.1s;
@@ -83,6 +83,7 @@
         let lastMouseX = 0;
 
         function startDragging(e) {
+            e.preventDefault();
             lampDragging = true;
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -92,13 +93,15 @@
             lastMouseX = clientX;
         }
 
-        function stopDragging() {
+        function stopDragging(e) {
+            e.preventDefault();
             lampDragging = false;
             lamp.style.cursor = 'grab';
         }
 
         function dragLamp(e) {
             if (lampDragging) {
+                e.preventDefault();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 const newLeft = clientX - lampOffsetX;
@@ -130,7 +133,9 @@
         }
 
         function playNextStompSound(index) {
-            stompSounds[index].play();
+            const sound = stompSounds[index];
+            sound.currentTime = 0; // Reset time to start
+            sound.play();
         }
 
         function createLetter(character, x = null, y = null) {
@@ -208,6 +213,20 @@
                 }
             }
         }
+
+        // Ensure audio elements are allowed to play on mobile devices
+        function initSounds() {
+            stompSounds.forEach(sound => {
+                sound.play().then(() => {
+                    sound.pause();
+                    sound.currentTime = 0;
+                }).catch(() => {});
+            });
+        }
+
+        // Initialize sounds on first user interaction
+        document.addEventListener('click', initSounds, { once: true });
+        document.addEventListener('touchstart', initSounds, { once: true });
 
         createPixarLetters();
     </script>
