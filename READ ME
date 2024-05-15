@@ -1,0 +1,38 @@
+# Lamp Stomper Game
+
+Lamp Stomper is a fun and interactive web game where you control a desk lamp to stomp on letters scattered across the screen. The goal is to squish the letters by stomping on them multiple times. Each letter requires four stomps to be fully squished, with different sound effects playing on each stomp.
+
+## Features
+
+- Drag the lamp to stomp on letters.
+- Letters need to be stomped four times to be fully squished.
+- Different sound effects for each stomp.
+- The lamp faces the direction of your mouse movement.
+- Works on both desktop and mobile browsers.
+
+## How to Play
+
+1. **Start the Game**: Open the `index.html` file in your web browser.
+2. **Control the Lamp**:
+   - On desktop: Click and drag the lamp with your mouse.
+   - On mobile: Touch and drag the lamp with your finger.
+3. **Stomp the Letters**: Move the lamp over the letters to stomp on them. Each letter requires four stomps to be squished.
+4. **Listen to Sound Effects**: Enjoy different sound effects with each stomp.
+5. **Track Your Progress**: The counter at the bottom of the screen shows the number of letters you have squished.
+
+Game Components
+
+HTML: Structure of the game.
+CSS: Styling of the game elements.
+JavaScript: Game logic and interactions.
+Audio Files: Sound effects for the stomps.
+
+Audio Files
+stomp_1.mp3
+stomp_2.mp3
+stomp_3.mp3
+stomp_4.mp3
+
+Customization
+Lamp Image: Replace the lamp.svg file with your desired image.
+Sound Effects: Replace the stomp_1.mp3, stomp_2.mp3, stomp_3.mp3, and stomp_4.mp3 files with your desired sound effects.
